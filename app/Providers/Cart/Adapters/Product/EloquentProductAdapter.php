@@ -30,13 +30,15 @@ class EloquentProductAdapter implements ProductAdapterInterface{
         }
         $this->product = \App::make(Config::get('cart.models.product'));
     }
+    
     /**
-     * Function to get all the products
+     * Function to get all the products(top 10)
      * 
+     * @param integer Number of records
      * @return array array of all the product with details
      */
-    public function all(){
-        return $this->product->orderBy('product_name')->get()->toArray();
+    public function all($limit = 10){
+        return $this->product->orderBy('id','desc')->limit($limit)->get()->toArray();
     }
             
     /**
@@ -76,7 +78,7 @@ class EloquentProductAdapter implements ProductAdapterInterface{
      * @param string SubCategory of the product
      * @param decimal Price of the product
      * @param array Key value pair
-     * @return bool Sucessfully added or not
+     * @return bool Successfully added or not
      */
     public function add($product_name, $product_category, $product_sub_category, $price, $attributes){
         if(empty($product_name) || empty($product_category) || empty($product_sub_category) || empty($attributes) ||empty($price)){
@@ -103,7 +105,7 @@ class EloquentProductAdapter implements ProductAdapterInterface{
      * 
      * @param integer Id of the product to be updated
      * @param array key value pair of the data to be updated
-     * @return bool Sucessfully updated or not
+     * @return bool Successfully updated or not
      */
     public function update($product_id, $product_data){
         if(empty($product_id) || empty($product_data)){
@@ -124,7 +126,7 @@ class EloquentProductAdapter implements ProductAdapterInterface{
      * 
      * @param string value - either name or id of the product
      * @param string possible values id/name
-     * @return bool Sucessfully deleted or not
+     * @return bool Successfully deleted or not
      */
     public function delete($identifier, $type = 'id'){
         
@@ -146,5 +148,38 @@ class EloquentProductAdapter implements ProductAdapterInterface{
             \Log::error("Empty argument in delete@EloquentProductAdapter identifier - $identifier, type - $type");
             throw new \InvalidArgumentException("One of the arguments is empty", 400);
         }
+    }
+    
+    /**
+     * Function to do a full text search on the products Database and return the best matching products
+     * 
+     * @param string Text entered by the user to search a product
+     * @param int Max number of products required to be returned
+     * @return mixed Array of the top matching products
+     */
+    public function textSearch($keywords, $top = 5){
+        /**
+         * SELECT * 
+           FROM products, plainto_tsquery($keywords) AS q 
+           WHERE (searchtext @@ q) 
+           ORDER BY ts_rank_cd(searchtext, plainto_tsquery($keywords)) DESC;
+         */
+        
+        if(empty($keywords)){
+            \Log::error("Empty argument in textSearch@EloquentProductAdapter keywords - $keywords");
+            throw new \InvalidArgumentException("One of the arguments is empty", 400);
+        }
+        
+        $ts_table = \DB::raw("plainto_tsquery('$keywords') AS ts_table"); 
+        
+        $products = \DB::table('products')
+            ->select("*")
+            ->crossJoin($ts_table)
+            ->whereRaw('(searchtext @@ ts_table)')
+            ->orderBy(\DB::raw("ts_rank_cd(searchtext, plainto_tsquery('$keywords'))", 'DESC'))
+            ->get()
+            ->toArray();
+        
+        return $products;
     }
 }

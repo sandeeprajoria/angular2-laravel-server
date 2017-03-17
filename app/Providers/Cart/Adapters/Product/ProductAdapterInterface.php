@@ -9,11 +9,12 @@
 interface ProductAdapterInterface {
     
     /**
-     * Function to get all the products
+     * Function to get all the products(top 10)
      * 
+     * @param integer Number of records
      * @return array array of all the product with details
      */
-    public function all();
+    public function all($limit = 10);
 
     /**
      * Function to get the details of a product
@@ -32,7 +33,7 @@ interface ProductAdapterInterface {
      * @param string SubCategory of the product
      * @param decimal Price of the product
      * @param array Key value pair
-     * @return bool Sucessfully added or not
+     * @return bool Successfully added or not
      */
     public function add($product_name, $product_category, $product_sub_category, $price, $attributes);
 
@@ -41,7 +42,7 @@ interface ProductAdapterInterface {
      * 
      * @param integer Id of the product to be updated
      * @param array key value pair of the data to be updated
-     * @return bool Sucessfully updated or not
+     * @return bool Successfully updated or not
      */
     public function update($product_id, $product_data);
     
@@ -50,7 +51,16 @@ interface ProductAdapterInterface {
      * 
      * @param string value - either name or id of the product
      * @param string possible values id/name
-     * @return bool Sucessfully deleted or not
+     * @return bool Successfully deleted or not
      */
     public function delete($identifier, $type = 'id');
+    
+    /**
+     * Function to do a full text search on the products Database and return the best matching products
+     * 
+     * @param string Text entered by the user to search a product
+     * @param int Max number of products required to be returned
+     * @return mixed Array of the top matching products
+     */
+    public function textSearch($keyword, $top = 5);
 }

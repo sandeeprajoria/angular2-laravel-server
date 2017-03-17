@@ -63,6 +63,23 @@ Route::get('/product/all', function() {
     return response()->json(['status' => 'SUCCESS', 'products' => Product::getAll()], 200);
 });
 
+/**
+ * Return the best matching products
+ */
+Route::middleware('auth:api')->post('/product/search', function(Request $request) {
+    try {
+        $products = Product::fullTextSearch($request['query_string']);
+        if(count($products) > 0){
+            return response()->json(['status' => 'SUCCESS', 'products' => $products, 'total' => count($products), 'message' => ''], 200);
+        }else{
+            return response()->json(['status' => 'SUCCESS', 'products' => [], 'total' => 0, 'message' => 'No matching products found.'], 200);
+        }
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'FAILURE', 'message' => $e->getMessage()], 400);
+    }
+});
+
+
 Route::middleware('auth:api')->get('/cart', function(Request $request) {
     try {
         $user = $request->user();

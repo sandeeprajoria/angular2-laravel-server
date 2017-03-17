@@ -80,4 +80,14 @@ class Product implements ProductInterface {
     public function delete($product_id){
         return $this->product->delete($product_id, 'id');
     }
+    
+    /**
+     * Function to do a fulltext search on the products DB and return the best matching
+     * 
+     * @param string $keyword_text
+     * @return array Array of the products found matching
+     */
+    public function fullTextSearch($keyword_text){
+        return $this->product->textSearch($keyword_text);
+    }
 }
