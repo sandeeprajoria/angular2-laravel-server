@@ -169,6 +169,11 @@ class EloquentProductAdapter implements ProductAdapterInterface{
             \Log::error("Empty argument in textSearch@EloquentProductAdapter keywords - $keywords");
             throw new \InvalidArgumentException("One of the arguments is empty", 400);
         }
+
+        //cant return stuff on any other DB type
+        if(config('database.default') !== 'pgsql'){
+            return [];
+        }
         
         $ts_table = \DB::raw("plainto_tsquery('$keywords') AS ts_table"); 
         
